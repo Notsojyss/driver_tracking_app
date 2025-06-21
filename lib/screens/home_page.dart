@@ -20,6 +20,7 @@ class _HomePageState extends State<HomePage> {
   final Location _location = Location();
   StreamSubscription<LocationData>? _locationSubscription;
   LocationData? _currentLocation;
+  bool _isTracking = false;
 
   @override
   void initState() {
@@ -33,9 +34,13 @@ class _HomePageState extends State<HomePage> {
 
     if (status.isGranted) {
       debugPrint('Location permission granted. Starting location tracking.');
+      setState(() {
+        _isTracking = true;
+      });
       _locationSubscription =
           _location.onLocationChanged.listen((LocationData locationData) {
-        debugPrint('New location received: ${locationData.latitude}, ${locationData.longitude}');
+        debugPrint(
+            'New location received: ${locationData.latitude}, ${locationData.longitude}');
         setState(() {
           _currentLocation = locationData;
         });
@@ -43,6 +48,9 @@ class _HomePageState extends State<HomePage> {
       });
     } else {
       debugPrint('Location permission denied.');
+      setState(() {
+        _isTracking = false;
+      });
     }
   }
 
@@ -54,32 +62,98 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = _authService.currentUser;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: const Text('Driver Dashboard'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
+            tooltip: 'Sign Out',
             onPressed: () async {
               await _authService.signOut();
             },
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Welcome! You are logged in.'),
-            const SizedBox(height: 20),
-            if (_currentLocation != null)
-              Text(
-                  'Lat: ${_currentLocation!.latitude}, Lng: ${_currentLocation!.longitude}')
-            else
-              const Text('Getting location...'),
-          ],
-        ),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          if (user != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: Text(
+                'Welcome, ${user.email}',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+          Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        color: _isTracking ? Colors.green : Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Live Location Status',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _isTracking
+                        ? 'Tracking is active. Your location is being shared.'
+                        : 'Tracking is inactive. Grant location permissions to start.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const Divider(height: 32),
+                  _buildLocationInfo(
+                    icon: Icons.gps_fixed,
+                    label: 'Latitude',
+                    value: _currentLocation?.latitude?.toStringAsFixed(6) ??
+                        'N/A',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildLocationInfo(
+                    icon: Icons.gps_fixed,
+                    label: 'Longitude',
+                    value: _currentLocation?.longitude?.toStringAsFixed(6) ??
+                        'N/A',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildLocationInfo({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.blue.shade700, size: 20),
+        const SizedBox(width: 12),
+        Text('$label: ', style: Theme.of(context).textTheme.titleMedium),
+        const Spacer(),
+        Text(value, style: Theme.of(context).textTheme.bodyLarge),
+      ],
     );
   }
 } 
