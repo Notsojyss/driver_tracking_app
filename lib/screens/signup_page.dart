@@ -3,21 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../auth_service.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
   bool _isLoading = false;
 
-  Future<void> _signIn() async {
+  Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -25,16 +25,23 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      await _authService.signInWithPassword(
+      await _authService.signUp(
         _emailController.text,
         _passwordController.text,
       );
-      // GoRouter will handle redirection, no need for context navigation here.
+      if (mounted) {
+        ElegantNotification.success(
+          title: const Text("Success"),
+          description: const Text(
+              "Your account has been created! Please check your email for a verification link."),
+        ).show(context);
+        context.go('/login');
+      }
     } catch (e) {
       if (mounted) {
         ElegantNotification.error(
           title: const Text("Error"),
-          description: Text('Failed to sign in: $e'),
+          description: Text('Failed to sign up: $e'),
         ).show(context);
       }
     } finally {
@@ -67,13 +74,13 @@ class _LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Icon(
-                    Icons.drive_eta,
+                    Icons.person_add_alt_1,
                     size: 80,
                     color: Colors.blue,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Driver Login',
+                    'Create Account',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
@@ -117,23 +124,24 @@ class _LoginPageState extends State<LoginPage> {
                   _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : ElevatedButton(
-                          onPressed: _signIn,
+                          onPressed: _signUp,
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text('Sign In'),
+                          child: const Text('Sign Up'),
                         ),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account?"),
+                      const Text("Already have an account?"),
                       TextButton(
-                        onPressed: _isLoading ? null : () => context.go('/signup'),
-                        child: const Text('Sign Up'),
+                        onPressed:
+                            _isLoading ? null : () => context.go('/login'),
+                        child: const Text('Sign In'),
                       ),
                     ],
                   ),

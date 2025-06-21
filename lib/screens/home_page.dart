@@ -6,6 +6,7 @@ import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:driver_tracking_app/auth_service.dart';
 import 'package:driver_tracking_app/database_service.dart';
+import 'package:go_router/go_router.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -68,6 +69,13 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Driver Dashboard'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Profile',
+            onPressed: () {
+              context.go('/profile');
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sign Out',

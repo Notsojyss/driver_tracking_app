@@ -6,6 +6,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_service.dart';
 import 'screens/home_page.dart';
 import 'screens/login_page.dart';
+import 'screens/signup_page.dart';
+import 'screens/splash_page.dart';
+import 'screens/profile_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,25 +27,40 @@ final _router = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) => const HomePage(),
-      redirect: (context, state) {
-        final authService = AuthService();
-        if (authService.currentUser == null) {
-          return '/login';
-        }
-        return null;
-      },
     ),
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginPage(),
     ),
     GoRoute(
-      path: '/home',
-      builder: (context, state) => const HomePage(),
+      path: '/signup',
+      builder: (context, state) => const SignUpPage(),
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfilePage(),
     ),
   ],
   refreshListenable:
       GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
+  redirect: (BuildContext context, GoRouterState state) {
+    final authService = AuthService();
+    final loggedIn = authService.currentUser != null;
+    final loggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/signup';
+
+    // If the user is not logged in and not trying to log in, redirect to the login page.
+    if (!loggedIn && !loggingIn) {
+      return '/login';
+    }
+
+    // If the user is logged in and trying to access a login page, redirect to the home page.
+    if (loggedIn && loggingIn) {
+      return '/';
+    }
+
+    // No redirect needed.
+    return null;
+  },
 );
 
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -60,11 +78,44 @@ class GoRouterRefreshStream extends ChangeNotifier {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final StreamSubscription<AuthState> _authSubscription;
+  bool _isReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _authSubscription =
+        Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (mounted) {
+        setState(() {
+          _isReady = true;
+        });
+        _authSubscription.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (!_isReady) {
+      return const MaterialApp(
+        home: SplashPage(),
+      );
+    }
     return MaterialApp.router(
       title: 'Driver Tracking App',
       theme: ThemeData(
