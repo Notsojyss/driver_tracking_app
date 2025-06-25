@@ -126,17 +126,6 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           child: const Text('Sign In'),
                         ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("Don't have an account?"),
-                      TextButton(
-                        onPressed: _isLoading ? null : () => context.go('/signup'),
-                        child: const Text('Sign Up'),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),

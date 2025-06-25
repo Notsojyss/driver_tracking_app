@@ -6,9 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_service.dart';
 import 'screens/home_page.dart';
 import 'screens/login_page.dart';
-import 'screens/signup_page.dart';
 import 'screens/splash_page.dart';
-import 'screens/profile_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,21 +30,13 @@ final _router = GoRouter(
       path: '/login',
       builder: (context, state) => const LoginPage(),
     ),
-    GoRoute(
-      path: '/signup',
-      builder: (context, state) => const SignUpPage(),
-    ),
-    GoRoute(
-      path: '/profile',
-      builder: (context, state) => const ProfilePage(),
-    ),
   ],
   refreshListenable:
       GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
   redirect: (BuildContext context, GoRouterState state) {
     final authService = AuthService();
     final loggedIn = authService.currentUser != null;
-    final loggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/signup';
+    final loggingIn = state.matchedLocation == '/login';
 
     // If the user is not logged in and not trying to log in, redirect to the login page.
     if (!loggedIn && !loggingIn) {

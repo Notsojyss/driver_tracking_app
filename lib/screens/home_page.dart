@@ -70,13 +70,6 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Driver Dashboard'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person_outline),
-            tooltip: 'Profile',
-            onPressed: () {
-              context.go('/profile');
-            },
-          ),
-          IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sign Out',
             onPressed: () async {
@@ -96,6 +89,25 @@ class _HomePageState extends State<HomePage> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('GPS Tracking'),
+              Switch(
+                value: _isTracking,
+                onChanged: (value) async {
+                  if (value) {
+                    await _requestPermissionsAndTrackLocation();
+                  } else {
+                    _locationSubscription?.cancel();
+                    setState(() {
+                      _isTracking = false;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
           Card(
             elevation: 4,
             shape: RoundedRectangleBorder(
