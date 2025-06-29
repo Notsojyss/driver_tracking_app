@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'main.dart';
+import 'notifiers.dart';
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -6,24 +8,35 @@ class AuthService {
   Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
   User? get currentUser => _supabase.auth.currentUser;
 
-  Future<void> signInWithPassword(String email, String password) async {
-    final response = await _supabase.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+Future<void> signInWithPassword(String email, String password) async {
+  final response = await Supabase.instance.client.auth.signInWithPassword(
+    email: email,
+    password: password,
+  );
 
-    final user = response.user;
-    if (user == null) throw Exception('Sign-in failed');
+  final user = response.user;
+  final session = response.session;
 
-    final role = await getUserRole(user.id);
-
-    if (role != 'driver') {
-      await signOut(); // Force sign-out
-      throw Exception('Access denied: only drivers can sign in.');
-    }
-
-    // Continue if driver
+  if (user == null || session == null) {
+    throw Exception('Invalid credentials.');
   }
+
+  // Check role before letting GoRouter react
+  final role = await getUserRole(user.id);
+
+if (role != 'driver') {
+  await signOut();
+  throw Exception('Access denied: only drivers can log in.');
+}
+
+authNotifier.value = !authNotifier.value;
+
+
+  // Role is valid, do nothing – GoRouter will now redirect
+}
+
+
+
 
 
   Future<String?> getUserRole(String userId) async {
@@ -37,6 +50,8 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    await _supabase.auth.signOut();
-  }
+  await _supabase.auth.signOut();
+  authNotifier.value = !authNotifier.value; // ✅ Force GoRouter to refresh
+}
+
 }

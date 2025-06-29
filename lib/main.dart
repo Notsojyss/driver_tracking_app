@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'notifiers.dart';
 import 'auth_service.dart';
 import 'screens/home_page.dart';
 import 'screens/login_page.dart';
@@ -20,38 +20,24 @@ void main() async {
   runApp(const MyApp());
 }
 
+
 final _router = GoRouter(
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const HomePage(),
-    ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginPage(),
-    ),
-  ],
-  refreshListenable:
-      GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
-  redirect: (BuildContext context, GoRouterState state) {
-    final authService = AuthService();
-    final loggedIn = authService.currentUser != null;
+  refreshListenable: authNotifier,
+  redirect: (context, state) {
+    final user = Supabase.instance.client.auth.currentUser;
     final loggingIn = state.matchedLocation == '/login';
 
-    // If the user is not logged in and not trying to log in, redirect to the login page.
-    if (!loggedIn && !loggingIn) {
-      return '/login';
-    }
+    if (user == null && !loggingIn) return '/login';
+    if (user != null && loggingIn) return '/';
 
-    // If the user is logged in and trying to access a login page, redirect to the home page.
-    if (loggedIn && loggingIn) {
-      return '/';
-    }
-
-    // No redirect needed.
     return null;
   },
+  routes: [
+    GoRoute(path: '/', builder: (_, __) => const HomePage()),
+    GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+  ],
 );
+
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {

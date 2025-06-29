@@ -17,40 +17,36 @@ class _LoginPageState extends State<LoginPage> {
   final _authService = AuthService();
   bool _isLoading = false;
 
-  Future<void> _signIn() async {
+Future<void> _signIn() async {
   if (!_formKey.currentState!.validate()) return;
 
   setState(() {
     _isLoading = true;
   });
 
-  try {
-    await _authService.signInWithPassword(
-      _emailController.text,
-      _passwordController.text,
-    );
+ try {
+  await _authService.signInWithPassword(
+    _emailController.text,
+    _passwordController.text,
+  );
 
-    if (mounted) {
-      ElegantNotification.success(
-        title: const Text("Success"),
-        description: const Text('Welcome, driver!'),
-      ).show(context);
+  if (mounted) {
+    ElegantNotification.success(
+      title: const Text("Login Successful"),
+      description: const Text("Welcome, driver!"),
+    ).show(context);
 
-      // Delay to let the success alert be visible
-      await Future.delayed(const Duration(seconds: 2));
-    }
-
-    // GoRouter can now take over navigation
-  } catch (e) {
-    if (mounted) {
-      String errorMessage = e.toString().replaceFirst('Exception: ', '');
-
-      ElegantNotification.error(
-        title: const Text("Login Failed"),
-        description: Text(errorMessage),
-      ).show(context);
-    }
-  } finally {
+    await Future.delayed(const Duration(seconds: 2));
+    context.go('/'); // 🔒 This only happens if role is valid!
+  }
+} catch (e) {
+  if (mounted) {
+    ElegantNotification.error(
+      title: const Text("Login Failed"),
+      description: Text(e.toString().replaceFirst('Exception: ', '')),
+    ).show(context);
+  }
+} finally {
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -58,6 +54,8 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 }
+
+
 
 
 
