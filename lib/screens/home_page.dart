@@ -7,6 +7,12 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:driver_tracking_app/auth_service.dart';
 import 'package:driver_tracking_app/database_service.dart';
 import 'package:go_router/go_router.dart';
+import 'package:elegant_notification/elegant_notification.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:location/location.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -62,8 +68,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final user = _authService.currentUser;
+
+Widget build(BuildContext context) {
+  final uri = Uri.parse(GoRouterState.of(context).uri.toString());
+  final loginSuccess = uri.queryParameters['login'] == 'success';
+
+  if (loginSuccess) {
+    // Clear the query param by pushing to clean route
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ElegantNotification.success(
+        title: const Text("Success"),
+        description: const Text('Welcome, driver!'),
+      ).show(context);
+
+      // Remove query parameter to avoid repeated alert
+      context.go('/');
+    });
+  }
+
+  final user = _authService.currentUser;
+
 
     return Scaffold(
       appBar: AppBar(

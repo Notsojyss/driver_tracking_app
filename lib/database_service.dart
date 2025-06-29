@@ -23,31 +23,4 @@ class DatabaseService {
       debugPrint('No user is currently signed in. Cannot add location log.');
     }
   }
-
-  Future<Map<String, dynamic>?> getDriverProfile() async {
-    final user = _supabase.auth.currentUser;
-    if (user != null) {
-      final response = await _supabase
-          .from('drivers')
-          .select()
-          .eq('id', user.id)
-          .single();
-      return response;
-    }
-    return null;
-  }
-
-  Future<void> updateDriverProfile(
-      {required String name,
-      required String phone,
-      required String vehicleNo}) async {
-    final user = _supabase.auth.currentUser;
-    if (user != null) {
-      await _supabase.from('drivers').update({
-        'name': name,
-        'phone': phone,
-        'vehicle_no': vehicleNo,
-      }).eq('id', user.id);
-    }
-  }
 } 
